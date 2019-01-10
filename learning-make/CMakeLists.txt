@@ -1,0 +1,17 @@
+#CMAKE_C_COMPILER: 컴파일러 지정
+#ADD_COMPILER_OPTION: 컴파일러 옵션 지정
+
+
+CMAKE_MINIMUN_REQUIRED(VERSION 2.8)
+PROJECT(PRACTICE_CMAKE) #${CMAKE_PROJECT_NAME}
+MESSAGE(${CMAKE_PROJECT_NAME})
+#CMAKE_BUILD_TYPE: 빌드 형상 결정 Debug/Release 등등..
+#CMAKE_VERBOSE_MAKEFILE: 1로 지정하면 빌드 상세과정 모두 출력
+
+SET(SRC_FILES main.c foo.c bar.c)
+ADD_EXECUTABLE(app.out ${SRC_FILES})
+#ADD_LIBRARY
+#ADD_DEPENDENDCIES
+#ADD_CUSTOM_TARGET: make 메크로를 만들 때 많이 사용
+#INSTALL: make install 정의
+#CMAKE_INSTALL_PREFIX: make install 명령에서 설치할 기본 디렉토리 지정

@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/h2oche/github/learning-make/bar.c
+stdio.h
+-
+
+/Users/h2oche/github/learning-make/bar.h
+
+/Users/h2oche/github/learning-make/foo.c
+stdio.h
+-
+
+/Users/h2oche/github/learning-make/foo.h
+
+/Users/h2oche/github/learning-make/main.c
+foo.h
+/Users/h2oche/github/learning-make/foo.h
+bar.h
+/Users/h2oche/github/learning-make/bar.h
+

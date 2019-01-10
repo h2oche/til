@@ -1,0 +1,169 @@
+# haskell introduction #4
+
+### Functors, Applicative Functors, Monoids
+
+- Functors redux
+	- functor
+		- typeclass which has only one typeclass method *fmap*
+			- fmap :: (a->b) -> f a -> f b
+		- think instances of functor as a box might be helpful to imagine how it works
+			- Maybe, Either a, IO, [], ...
+		- can also look at functors as things that output values in context
+			- Just 3: outputs the value 3 in the context that it might or not output any values at all
+	- IO
+		- instance Functor IO where
+			- fmap f action = do
+				- result <- action
+				- return (f result)
+	- (->) r
+		- function type *r -> a* is same with *(->) r a*
+		- instance Functor ((->) r) where
+			- fmap f g = (\x -> f (g x))
+			- fmap :: (a -> b) -> (r -> a) -> (r -> b)
+				- same with function composition
+				- fmap == (.)
+	- functor law
+		1. fmap id = id
+		2. fmap (f. g) = fmap f . fmap g
+		- remember that even if some typeclass implements fmap, it could be not a functor
+- Applicative functors
+	- Definition
+		- class (Functor f) => Applicative f where
+			- pure :: a -> f a
+			- (<\*>) :: f (a -> b) -> f a -> f b
+		- pure: minimal context of functor
+	- <$>
+		- (<$>) :: (Functor f) => (a -> b) -> f a -> f b
+		- f <$> x = fmap f x
+		- pure f <\*> x <\*> y <\*> ... == fmap f x <\*> y <\*> ... == f <$> x <\*> y <\*> ...
+	- liftA2
+		- liftA2 :: (Applicative f) => (a->b->c) -> f a -> f b -> f c
+		- liftA2 f a b = f <$> a <\*> b
+		- with applicative functors, we can apply a function between several functors
+			- more powerful than ordinary functor that can just map over just one functor
+	- sequenceA
+		- sequenceA :: (Applicative f) => [f a] -> f [a]
+		- sequenceA [] = pure []
+		- sequenceA x:xs = (:) <$> x <\*> sequenceA xs
+		- sequenceA = foldr (liftA2 (:)) (pure [])
+	- applicative functor law
+		- pure f <\*> x = fmap f x
+		- pure id <\*> v = v
+		- pure (.) <\*> u <\*> v <\*> w = u <\*> (v <\*> w)
+		- pure f <\*> pure x = pure (f x)
+		- u <\*> pure y = pure ($ y) <\*> u
+	- Example - Maybe
+		- instance Applicative Mabye where
+			- pure = Just
+			- Nothing <\*> _ = Nothing
+			- (Just f) <\*> something = fmap f something
+		- ghci> pure (+ 3) <\*> Just 1 == Just 4
+		- ghci> pure (+) <\*> Just 3 <\*> Just 3 == Just 6
+	- Example - List
+		- instance Applicative [] where
+			- pure x = [x]
+			- fs <\*> xs = [f x | f <- fs, x <- xs]
+	- Example - IO
+		- instance Applicative IO where
+			- pure = return
+			- a <\*> b = do
+				- f <- a
+				- x <- b
+				- return (f x)
+	- Example - (->) r
+		- instance Applicative ((->) r) where
+			- pure x = (\_ -> x)
+			- f <\*> g = \x -> f x (g x)
+	- Example - ZipList
+		- instance Applicative ZipList where
+			- pure x = ZipList (repeat x)
+			- ZipList fs <\*> ZipList xs = ZipList (zipWith (\f x -> f x) fs xs)
+	- Example - cases
+		- [x\*y | x <- [2,5,10], y <- [8,10,11]] == (\*) <$> [2,5,10] <\*> [8,10,11]
+			- using the applicative style on lists is often good replacement for list comprehensions
+		- myAction = do; a <- getLine; b <- getLine; return $ a ++ b == (++) <$> getLine <\*> getLine
+		- (+) <$> (+3) <\*> (*100) $ 5 == 508
+		- (\x y z -> [x,y,z]) <$> (+3) <\*> (*2) <\*> (/2) $ 5 == [8.0, 10.0, 2.5]
+		- (,,) <$> ZipList "dog" <\*> ZipList "cat" <\*> ZipList "rat" == [('d','c','r'),('o','a','a'),('g','t','t')]
+			- (,,) == \x y z -> (x,y,z), (,) == \x y -> (x,y)
+- Newtype Keyword
+	- definition
+		- data keyword : create new algebraic data types
+		- type keyword : give new name to already existing type
+		- newtype keyword : make new types out of existing data types 
+		- newtype keyword is for wrapping existing type and presenting it as another type
+			- example) ZipList
+		- can have only one value constructor, one field
+			- ex) newtype CoolBool = CoolBool {getCoolBool :: Bool}
+	- Using newtype keyword is faster than using data keyword
+		- Haskell runtime system doesn't do wrapping, unwrapping types with newtype keyword
+	- Usage - tuple
+		- newtype Pair b a = Pair { getPair :: (a,b) }
+		- instance Functor (Pair c) where
+			- fmap f (Pair (x,y)) = Pair (f x, y)
+		- getPair $ fmap (*100) (Pair (2,3)) == (200, 3)
+	- newtype vs data
+		- helloMe :: CoolBool -> String
+		- helloMe (CoolBool _) = "hello"
+		- newtype CoolBool = CoolBool {getCoolBool :: Bool}
+		- helloMe undefined == "hello"
+		- data Coolbool = CoolBool {getCoolBool :: Bool}
+		- helloMe undefiend -> Exception occurs
+- Monoids
+	- definition
+		- class Monoid m where
+			- mepmty :: m
+			- mappend :: m -> m -> m
+			- mconcat :: [m] -> m
+			- mconcat = foldr mappend mempty
+	- monoid law
+		- mempty `mappend` x = x
+		- x `mappend` mempty = x
+		- (x `mappend` y) `mappend` z = x `mappend` (y `mappend` z)
+	- Example - List
+		- instance Monoid [a] where
+			- mempty = []
+			- mappend = (++)
+	- Example - Product
+		- newtype Product a = Product {getProduct :: a} deriving (Eq, Ord, Read, Show, Bounded)
+		- instance Num a => Monoid (Product a) where
+			- mempty = Product 1
+			- Product x `mappend` Product Y = Product (x \* y)
+	- Example - Boolean
+		- newtype Any = Any {getAny ::Bool} deriving (Eq, Ord, Read, Show, Bounded}
+		- instance Monoid Any where
+			- mempty = Any False
+			- Any x `mappend` Any y = Any (x || y)
+		- newtype All = All {getAll :: Bool}
+		- instnace Monoid All where
+			- mempty = All True
+			- All x `mappend` All y = All (x && y)
+	- Example - Ordering
+		- instnace Monoid Ordering where
+			- mempty = EQ
+			- LT `mappend` _ = LT
+			- EQ `mappend` y = y
+			- GT `mappend` _ = GT
+	- Example - Maybe
+		- instance Monoid a => Monoid (Maybe a) where
+			- mempty = Nothing
+			- Nothing `mappend` m = m
+			- m `mappend` Nothing = m
+			- Just m1 `mappend` Just m2 = Just (m1 `mappend` m2)
+	- Using monoids to fold data structures
+		- Foldable
+			- like Functor is for that can be mapped over, Foldable is for that can be folded up
+			- can be found in Data.Foldable
+			- import qualified Data.Foldable as F
+			- F.foldr :: (F.Foldable t) => (a -> b -> b) -> b -> t a -> b
+		- Example - Tree
+			- data Tree a = Empty | Node a (Tree a) (Tree a) deriving (Show, Eq, Read)
+			- foldMap :: (Monoid m, Foldable t) => (a -> m) -> t a -> m
+			- instance F.Foldable Tree where
+				- foldMap f Empty = mempty
+				- foldMap f (Node x l r) = F.foldMap f l `mappend`
+				- 								f x           `mappend`
+				- 							    F.foldMap f r
+		- http://stackoverflow.com/questions/16757373/where-do-the-foldl-foldr-implementations-of-foldable-come-from-for-binary-trees
+		- https://hackage.haskell.org/package/base-4.9.0.0/docs/Data-Foldable.html
+				- Endomorphism?

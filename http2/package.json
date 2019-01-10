@@ -1,0 +1,14 @@
+{
+  "name": "http2-practice",
+  "version": "1.0.0",
+  "description": "http2 practice",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "h2oche",
+  "license": "MIT",
+  "dependencies": {
+    "http2": "^3.3.4"
+  }
+}

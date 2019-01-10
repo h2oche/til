@@ -1,0 +1,55 @@
+# Basic
+# app.out: main.o foo.o bar.o
+# 	gcc -o app.out main.o foo.o bar.o
+
+# main.o: main.c foo.h bar.h
+# 	gcc -c -o main.o main.c
+
+# foo.o: foo.h foo.c
+# 	gcc -c -o foo.o foo.c
+
+# bar.o: bar.h bar.c
+# 	gcc -c -o bar.o bar.c
+
+########################################################
+
+# Built-in Rule
+# app.out: main.o foo.o bar.o
+# 	gcc -o app.out main.o foo.o bar.o
+
+########################################################
+
+# Built-in Rule2
+# app.out: main.o foo.o bar.o
+# 	gcc -o app.out main.o foo.o bar.o
+
+# main.o: foo.h bar.h main.c
+# foo.o: foo.h foo.c
+# bar.o: bar.h bar.c
+
+########################################################
+
+# Variables
+#compiler
+CC=gcc 
+#compile option
+CFLAGS=-g -Wall
+#중간대상 목록
+OBJS=main.o foo.o bar.o
+#실행파일
+TARGET=app2.out
+#LDFLAGS: 링크 옵션
+#LDLIBS: 링크 라이브러리 목록들
+
+$(TARGET): $(OBJS)
+	$(CC) -o $@ $(OBJS)
+
+main.o: foo.h bar.h main.c
+foo.o: foo.h foo.c
+bar.o: bar.h bar.c
+
+clean:
+	rm -f *.o
+	rm -f $(TARGET)
+
+########################################################
