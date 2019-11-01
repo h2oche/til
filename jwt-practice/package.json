@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/h2oche/jwt-practice#readme",
   "dependencies": {
-    "sequelize": "^3.23.0"
+    "sequelize": "^5.21.2"
   }
 }
